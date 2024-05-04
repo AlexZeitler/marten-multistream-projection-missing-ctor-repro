@@ -1,6 +1,6 @@
 using Npgsql;
 
-namespace MartenDotNetTestTemplate.Tests;
+namespace MartenMultiStreamMissingCtorRepro.Tests;
 
 public class TestDatabase
 {

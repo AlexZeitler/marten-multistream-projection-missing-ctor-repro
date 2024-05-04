@@ -1,4 +1,4 @@
-name: marten-test-template
+name: marte-multistream-missing-ctor-repro
 root: ./
 
 on_project_start: echo starting stack...
