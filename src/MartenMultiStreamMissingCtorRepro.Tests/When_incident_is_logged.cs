@@ -8,7 +8,7 @@ namespace MartenMultiStreamMissingCtorRepro.Tests;
 
 public record IncidentChatMessage
 {
-  public Guid Id { get; set; }
+  public string Id { get; set; }
   public string Context { get; set; }
   public string Text { get; set; }
   public string From { get; set; }
@@ -62,6 +62,7 @@ public class IncidentChatMessageProjection : MultiStreamProjection<IncidentChatM
   {
     return new IncidentChatMessage
     {
+      Id = $"{incidentLogged.Context}-{incidentLogged.ReceivedOn.ToUnixTimeMilliseconds()}",
       Context = incidentLogged.ContactPerson,
       From = incidentLogged.ContactPerson,
       On = incidentLogged.ReceivedOn,
