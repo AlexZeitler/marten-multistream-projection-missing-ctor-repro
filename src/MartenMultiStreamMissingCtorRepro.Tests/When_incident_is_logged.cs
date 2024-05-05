@@ -24,6 +24,15 @@ public record IncidentLogged(
   DateTimeOffset ReceivedOn
 );
 
+public record RepliedToIncident(
+  string Id,
+  string Context,
+  string Title,
+  string Message,
+  string ContactPerson,
+  DateTimeOffset ReceivedOn
+);
+
 public record Incident(
   string Id,
   string Title,
@@ -52,8 +61,10 @@ public class IncidentChatMessageProjection : MultiStreamProjection<IncidentChatM
 {
   public IncidentChatMessageProjection()
   {
-    Identity<IncidentLogged>(x => $"{x.Context}-{x.ReceivedOn.ToUnixTimeMilliseconds()}");
+    Identity<IncidentLogged>(x => $"{x.Context}-{Guid.NewGuid()}");
+    Identity<RepliedToIncident>(x => $"{x.Context}-{Guid.NewGuid()}");
     IncludeType<IncidentLogged>();
+    IncludeType<RepliedToIncident>();
   }
 
   public IncidentChatMessage Create(
@@ -62,11 +73,25 @@ public class IncidentChatMessageProjection : MultiStreamProjection<IncidentChatM
   {
     return new IncidentChatMessage
     {
-      Id = $"{incidentLogged.Context}-{incidentLogged.ReceivedOn.ToUnixTimeMilliseconds()}",
+      Id = $"{incidentLogged.Context}-{Guid.NewGuid()}",
       Context = incidentLogged.ContactPerson,
       From = incidentLogged.ContactPerson,
       On = incidentLogged.ReceivedOn,
       Text = incidentLogged.Message
+    };
+  }
+
+  public IncidentChatMessage Create(
+    RepliedToIncident repliedToIncident
+  )
+  {
+    return new IncidentChatMessage
+    {
+      Id = $"{repliedToIncident.Context}-{Guid.NewGuid()}",
+      Context = repliedToIncident.ContactPerson,
+      From = repliedToIncident.ContactPerson,
+      On = repliedToIncident.ReceivedOn,
+      Text = repliedToIncident.Message
     };
   }
 }
@@ -103,8 +128,21 @@ public class When_incident_is_logged
       DateTimeOffset.UtcNow
     );
 
+    var repliedToIncident = new RepliedToIncident(
+      _streamId,
+      $"incident-chat-{_streamId}",
+      "Reply-Title",
+      "Reply-Message",
+      "ContactPerson",
+      DateTimeOffset.UtcNow
+    );
+
     await using var session = _store.LightweightSession();
-    session.Events.Append(_streamId, incidentLogged);
+    session.Events.Append(
+      _streamId,
+      incidentLogged,
+      repliedToIncident
+    );
     await session.SaveChangesAsync();
   }
 
@@ -130,6 +168,6 @@ public class When_incident_is_logged
   [TearDown]
   public async Task DisposeAsync()
   {
-    await _testEventStore.DisposeAsync();
+    // await _testEventStore.DisposeAsync();
   }
 }
