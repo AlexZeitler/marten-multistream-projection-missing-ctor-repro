@@ -162,7 +162,7 @@ public class When_incident_is_logged
     await using var session = _store.QuerySession();
     var chatMessages = await session.Query<IncidentChatMessage>()
       .ToListAsync();
-    chatMessages.Count.ShouldBe(1);
+    chatMessages.Count.ShouldBe(2);
   }
 
   [TearDown]
